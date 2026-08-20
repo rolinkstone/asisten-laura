@@ -12,9 +12,9 @@ services:
     environment:
       - DB_HOST=127.0.0.1
       - DB_PORT=3306
-      - DB_USER=bpom_ai
-      - DB_PASSWORD=SatXr75Y64kbDCaT
-      - DB_NAME=bpom_ai
+      - DB_USER=bbpom_ai
+      - DB_PASSWORD=6Cb8ZaMHrLGtmARR
+      - DB_NAME=bbpom_ai
       - KEYCLOAK_SERVER_URL=http://localhost:8180
       - KEYCLOAK_REALM=master
       - KEYCLOAK_ADMIN_USERNAME=admin
@@ -45,7 +45,7 @@ services:
       - "3003:3003"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://data-asissten.bbpompky.id/api
+      - NEXT_PUBLIC_API_URL=https://data-asisten.bbpompky.id/api
       - KEYCLOAK_ISSUER=http://keycloak:8080/realms/master
       - KEYCLOAK_CLIENT_ID=assistant
       - KEYCLOAK_CLIENT_SECRET=4GiUIh9Z5b6vXV4pBtheIunRMQvVJsuT
