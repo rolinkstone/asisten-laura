@@ -1,0 +1,35 @@
+# ============================================================
+# .gitignore root — BPOM AI
+# ============================================================
+
+# ===== Environment (berisi secret — JANGAN di-commit) =====
+.env
+.env.*
+!.env.example
+
+# ===== Docker data volumes =====
+data/
+
+# ===== Node.js =====
+node_modules/
+
+# ===== Build output =====
+.next/
+dist/
+build/
+out/
+
+# ===== Logs =====
+logs/
+*.log
+npm-debug.log*
+
+# ===== Uploads / files user =====
+uploads/
+
+# ===== OS / Editor =====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.pem
