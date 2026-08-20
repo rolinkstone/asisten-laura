@@ -16,7 +16,12 @@ services:
       - DB_PASSWORD=6Cb8ZaMHrLGtmARR
       - DB_NAME=bbpom_ai
       - KEYCLOAK_SERVER_URL=http://localhost:8180
+      - KEYCLOAK_ISSUER=https://auth.bbpompky.id/realms/master
       - KEYCLOAK_REALM=master
+      - KEYCLOAK_CLIENT_ID=assistant
+      - KEYCLOAK_CLIENT_SECRET=4GiUIh9Z5b6vXV4pBtheIunRMQvVJsuT
+      - JWT_SECRET=oMKqGLqJke1Yk7F2kvHqasysu/Y7CWy2VSMmFJ2sUbo=
+      - CORS_ORIGIN=https://asisten-laura.bbpompky.id
       - KEYCLOAK_ADMIN_USERNAME=admin
       - KEYCLOAK_ADMIN_PASSWORD=ontageniT1!
       - NODE_ENV=production
