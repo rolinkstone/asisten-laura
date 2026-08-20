@@ -282,13 +282,13 @@ export default function Chat() {
                   </div>
 
                   <h2 className="text-xl font-bold text-slate-900">
-                    Selamat datang di Layanan Informasi Resmi BBPOM 👋
+                    Selamat datang di Layanan Informasi Resmi BBPOM di Palangka Raya 👋
                   </h2>
 
                   <p className="text-slate-600 mt-3 text-sm leading-relaxed max-w-md mx-auto">
-                    Saya <span className="font-semibold text-brand-700">LAURA</span> — Layanan
-                    Aduan &amp; Untuk Rekomendasi Aman. Siap membantu Anda mendapatkan informasi
-                    seputar Obat dan Makanan yang aman dan terpercaya.
+                    Saya <span className="font-semibold text-brand-700">Asisten LAURA</span> (Asisten
+                    Layanan Aduan &amp; Informasi Obat dan Makanan). Siap membantu Anda mendapatkan
+                    informasi seputar Obat dan Makanan yang aman dan terpercaya.
                   </p>
                 </div>
 

@@ -75,7 +75,7 @@ const buildContext = (chunks) => {
  * @returns {string}
  */
 const buildSystemPrompt = (context) => {
-  return `Anda adalah LAURA (Layanan Aduan & Untuk Rekomendasi Aman), asisten virtual resmi Balai Besar/Balai POM Palangka Raya.
+  return `Anda adalah LAURA (Asisten Layanan Aduan & Informasi Obat dan Makanan), asisten virtual resmi Balai Besar/Balai POM Palangka Raya.
 
 Instruksi:
 1. Gunakan HANYA informasi dari sumber yang diberikan di bawah untuk menjawab pertanyaan.
@@ -89,7 +89,7 @@ ${context}`;
 
 // ====================== Skrip LAURA (menu) ======================
 
-const WELCOME_TEXT = `Halo! Selamat datang di Layanan Informasi Resmi BBPOM di Palangka Raya. 👋\n\nSaya LAURA (Layanan Aduan & Untuk Rekomendasi Aman), asisten virtual yang siap membantu Anda mendapatkan informasi seputar Obat dan Makanan yang aman dan terpercaya.\n\nAda yang bisa LAURA bantu hari ini? Silakan pilih menu di bawah atau ketik pertanyaan Anda:\n1️⃣ Cek Produk & Izin Edar (Obat, Makanan, Kosmetik, Suplemen)\n2️⃣ Pengaduan & Laporan Produk (Kadaluwarsa, Tanpa Izin Edar, Berbahaya)\n3️⃣ Informasi Konsultasi & Layanan Publik\n4️⃣ Tips Konsumsi Aman & Cek KLIK\n\n(Balas dengan angka 1 - 4 atau ketik langsung pertanyaan Anda)`;
+const WELCOME_TEXT = `Halo! Selamat datang di Layanan Informasi Resmi BBPOM di Palangka Raya. 👋\n\nSaya LAURA (Asisten Layanan Aduan & Informasi Obat dan Makanan), asisten virtual yang siap membantu Anda mendapatkan informasi seputar Obat dan Makanan yang aman dan terpercaya.\n\nAda yang bisa LAURA bantu hari ini? Silakan pilih menu di bawah atau ketik pertanyaan Anda:\n1️⃣ Cek Produk & Izin Edar (Obat, Makanan, Kosmetik, Suplemen)\n2️⃣ Pengaduan & Laporan Produk (Kadaluwarsa, Tanpa Izin Edar, Berbahaya)\n3️⃣ Informasi Konsultasi & Layanan Publik\n4️⃣ Tips Konsumsi Aman & Cek KLIK\n\n(Balas dengan angka 1 - 4 atau ketik langsung pertanyaan Anda)`;
 
 const MENU_RESPONSES = {
   '1': `Untuk memastikan produk Obat/Makanan/Kosmetik yang Anda gunakan terdaftar resmi:\n\n📍 Silakan kirimkan Nomor Registrasi (NIE) atau Nama Produk/Brand yang ingin Anda cek.\n\nAtau Anda juga bisa melakukan pengecekan mandiri melalui aplikasi Cek BPOM atau situs resmi cekbpom.pom.go.id.`,
