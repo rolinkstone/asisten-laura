@@ -25,10 +25,22 @@ import {
 } from '../../../components/admin/ui';
 
 const PROVIDERS = [
-  { name: 'openai', label: 'OpenAI' },
-  { name: 'gemini', label: 'Gemini' },
-  { name: 'deepseek', label: 'DeepSeek' }
+  { name: 'opencode', label: 'OpenCode' },
+  { name: 'gemini', label: 'Gemini' }
 ];
+
+// Nama tampilan ramah untuk model yang dikenal (nilai asli tetap model ID untuk API)
+const MODEL_LABELS = {
+  'x-preview-f-free': 'Ox Alpha (Free)',
+  'hy3-free': 'Hy3 (Free)',
+  'big-pickle': 'Big Pickle (Free)',
+  'nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning (Free)',
+  'deepseek-v4-flash': 'DeepSeek V4 Flash',
+  'deepseek-v4-pro': 'DeepSeek V4 Pro',
+  'gemini-3.6-flash': 'Gemini 3.6 Flash',
+  'gemini-3.5-flash': 'Gemini 3.5 Flash'
+};
+const modelLabel = (id) => MODEL_LABELS[id] || id || '-';
 
 export default function AiPage() {
   const router = useRouter();
@@ -49,7 +61,7 @@ export default function AiPage() {
           enabled: res.data.enabled,
           providerOrder: (res.data.providerOrder || []).join(', '),
           models: res.data.models || {},
-          keys: { openai: '', gemini: '', deepseek: '' }
+          keys: { opencode: '', gemini: '' }
         });
       })
       .catch((err) => setError(err.message));
@@ -73,9 +85,8 @@ export default function AiPage() {
       const body = {
         enabled: form.enabled,
         providerOrder: form.providerOrder,
-        openai_model: form.models.openai,
-        gemini_model: form.models.gemini,
-        deepseek_model: form.models.deepseek
+        opencode_model: form.models.opencode,
+        gemini_model: form.models.gemini
       };
       // API key baru hanya dikirim bila diisi (hapus key pakai tombol terpisah)
       for (const p of PROVIDERS) {
@@ -207,7 +218,7 @@ export default function AiPage() {
             <Input
               value={form.providerOrder}
               onChange={(e) => setForm((f) => ({ ...f, providerOrder: e.target.value }))}
-              placeholder="mis. deepseek, gemini"
+              placeholder="mis. opencode, gemini"
             />
             <p className="text-xs text-slate-400 mt-1">
               Provider pertama dipakai utama; berikutnya sebagai cadangan saat utama gagal/limit.
@@ -238,6 +249,9 @@ export default function AiPage() {
                           }))
                         }
                       />
+                      {form.models[p.name] && (
+                        <p className="text-[11px] text-slate-400 mt-1">{modelLabel(form.models[p.name])}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-slate-500 mb-1">API Key</label>
@@ -298,7 +312,7 @@ export default function AiPage() {
               <Row
                 key={p.name}
                 label={`${p.label}`}
-                value={config.models?.[p.name] || '-'}
+                value={modelLabel(config.models?.[p.name])}
                 badge={config.configured?.[p.name] ? '✓ Key' : '✗ Tanpa key'}
                 badgeColor={config.configured?.[p.name] ? 'green' : 'red'}
               />

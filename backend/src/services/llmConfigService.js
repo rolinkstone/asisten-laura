@@ -8,12 +8,11 @@ const { getSetting, setSetting } = require('./settingsService');
  * Tidak pernah mengekspos API key via endpoint (hanya status terkonfigurasi).
  */
 
-const PROVIDER_NAMES = ['openai', 'gemini', 'deepseek'];
+const PROVIDER_NAMES = ['opencode', 'gemini'];
 
 const DEFAULT_MODELS = {
-  openai: 'gpt-4o-mini',
-  gemini: 'gemini-3.6-flash',
-  deepseek: 'deepseek-chat'
+  opencode: 'x-preview-f-free',
+  gemini: 'gemini-3.6-flash'
 };
 
 let state = null;
@@ -22,22 +21,18 @@ const envDefault = (key) => process.env[key] || null;
 
 const buildStateFromEnv = () => ({
   enabled: envDefault('LLM_ENABLED') !== 'false',
-  providerOrder: (envDefault('AI_PROVIDER') || 'openai')
+  providerOrder: (envDefault('AI_PROVIDER') || 'opencode')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
   providers: {
-    openai: {
-      apiKey: envDefault('OPENAI_API_KEY'),
-      model: envDefault('OPENAI_MODEL') || DEFAULT_MODELS.openai
+    opencode: {
+      apiKey: envDefault('OPENCODE_API_KEY'),
+      model: envDefault('OPENCODE_MODEL') || DEFAULT_MODELS.opencode
     },
     gemini: {
       apiKey: envDefault('GEMINI_API_KEY'),
       model: envDefault('GEMINI_MODEL') || DEFAULT_MODELS.gemini
-    },
-    deepseek: {
-      apiKey: envDefault('DEEPSEEK_API_KEY'),
-      model: envDefault('DEEPSEEK_MODEL') || DEFAULT_MODELS.deepseek
     }
   }
 });
@@ -79,7 +74,7 @@ const isEnabled = () => getConfig().enabled;
 
 const getProviderOrder = () => {
   const order = getConfig().providerOrder;
-  return order.length ? order : ['openai'];
+  return order.length ? order : ['opencode'];
 };
 
 const getApiKey = (name) => getConfig().providers[name]?.apiKey || null;
@@ -100,29 +95,25 @@ const isProviderConfigured = (name) => !!getApiKey(name);
 const updateConfig = async ({
   enabled,
   providerOrder,
-  openai_model,
+  opencode_model,
   gemini_model,
-  deepseek_model,
-  openai_api_key,
-  gemini_api_key,
-  deepseek_api_key
+  opencode_api_key,
+  gemini_api_key
 } = {}) => {
   if (enabled !== undefined) await setSetting('llm_enabled', enabled ? 'true' : 'false');
   if (providerOrder !== undefined) await setSetting('ai_provider', providerOrder);
 
   const modelSets = [
-    ['openai_model', openai_model],
-    ['gemini_model', gemini_model],
-    ['deepseek_model', deepseek_model]
+    ['opencode_model', opencode_model],
+    ['gemini_model', gemini_model]
   ];
   for (const [key, val] of modelSets) {
     if (val !== undefined && val !== null) await setSetting(key, String(val));
   }
 
   const keySets = [
-    ['openai_api_key', openai_api_key],
-    ['gemini_api_key', gemini_api_key],
-    ['deepseek_api_key', deepseek_api_key]
+    ['opencode_api_key', opencode_api_key],
+    ['gemini_api_key', gemini_api_key]
   ];
   for (const [key, val] of keySets) {
     if (val !== undefined) {
@@ -145,14 +136,12 @@ const getPublicConfig = () => {
     enabled: c.enabled,
     providerOrder: c.providerOrder,
     models: {
-      openai: c.providers.openai.model,
-      gemini: c.providers.gemini.model,
-      deepseek: c.providers.deepseek.model
+      opencode: c.providers.opencode.model,
+      gemini: c.providers.gemini.model
     },
     configured: {
-      openai: !!c.providers.openai.apiKey,
-      gemini: !!c.providers.gemini.apiKey,
-      deepseek: !!c.providers.deepseek.apiKey
+      opencode: !!c.providers.opencode.apiKey,
+      gemini: !!c.providers.gemini.apiKey
     }
   };
 };

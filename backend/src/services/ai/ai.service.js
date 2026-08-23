@@ -1,8 +1,7 @@
 const { searchChunks } = require('../vectorSearchService');
 const { hasPromptInjection, hardenSystemPrompt } = require('./promptGuard');
-const openaiProvider = require('./openai.provider');
+const opencodeProvider = require('./opencode.provider');
 const geminiProvider = require('./gemini.provider');
-const deepseekProvider = require('./deepseek.provider');
 const llmConfig = require('../llmConfigService');
 
 /**
@@ -13,14 +12,13 @@ const llmConfig = require('../llmConfigService');
  *   → bangun context (SYSTEM + SOURCE) → LLM → jawaban + sources
  *
  * Multi-provider dengan fallback:
- *   AI_PROVIDER=gemini,deepseek → gemini utama, deepseek cadangan
+ *   AI_PROVIDER=opencode,gemini → opencode utama, gemini cadangan
  *   (jika provider utama gagal / kena limit, otomatis lanjut ke berikutnya)
  */
 
 const PROVIDERS = {
-  openai: openaiProvider,
-  gemini: geminiProvider,
-  deepseek: deepseekProvider
+  opencode: opencodeProvider,
+  gemini: geminiProvider
 };
 
 /**
@@ -33,7 +31,7 @@ const getProviderOrder = () => {
     const p = PROVIDERS[n.toLowerCase()];
     if (p && !ordered.includes(p)) ordered.push(p);
   }
-  if (ordered.length === 0) ordered.push(openaiProvider);
+  if (ordered.length === 0) ordered.push(opencodeProvider);
   return ordered;
 };
 
@@ -42,11 +40,11 @@ const getProvider = () => getProviderOrder()[0];
 
 const isProviderConfigured = (provider) => {
   if (llmConfig.isProviderConfigured(provider.name)) return true;
-  // OpenAI-compatible lokal (mis. Ollama via OPENAI_BASE_URL) tidak butuh API key
-  return provider.name === 'openai' && !!process.env.OPENAI_BASE_URL;
+  // OpenAI-compatible lokal (mis. gateway via OPENCODE_BASE_URL) tidak butuh API key
+  return provider.name === 'opencode' && !!process.env.OPENCODE_BASE_URL;
 };
 
-const getProviderModelName = (provider) => llmConfig.getModel(provider.name) || 'gpt-4o-mini';
+const getProviderModelName = (provider) => llmConfig.getModel(provider.name) || 'x-preview-f-free';
 
 /**
  * Bangun blok context dari chunk hasil vector search.
