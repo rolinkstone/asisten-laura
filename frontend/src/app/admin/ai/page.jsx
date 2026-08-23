@@ -42,6 +42,16 @@ const MODEL_LABELS = {
 };
 const modelLabel = (id) => MODEL_LABELS[id] || id || '-';
 
+// Opsi model OpenCode Zen — biar mudah dipilih di form (tampil sebagai saran, nilai tetap bisa diketik manual)
+const MODEL_OPTIONS = [
+  { id: 'x-preview-f-free', label: 'Ox Alpha (Free)' },
+  { id: 'hy3-free', label: 'Hy3 (Free)' },
+  { id: 'big-pickle', label: 'Big Pickle (Free)' },
+  { id: 'nemotron-3.5-lightning-free', label: 'Nemotron 3.5 Lightning (Free)' },
+  { id: 'mimo-v2.5-free', label: 'MiMo-V2.5 (Free)' },
+  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash (berbayar)' }
+];
+
 export default function AiPage() {
   const router = useRouter();
   const [config, setConfig] = useState(null);
@@ -227,6 +237,11 @@ export default function AiPage() {
 
           {/* Per provider */}
           <div className="space-y-4">
+            <datalist id="zen-model-options">
+              {MODEL_OPTIONS.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </datalist>
             {PROVIDERS.map((p) => {
               const configured = config.configured?.[p.name];
               return (
@@ -241,6 +256,7 @@ export default function AiPage() {
                     <div>
                       <label className="block text-xs font-medium text-slate-500 mb-1">Model</label>
                       <Input
+                        list={p.name === 'opencode' ? 'zen-model-options' : undefined}
                         value={form.models[p.name] || ''}
                         onChange={(e) =>
                           setForm((f) => ({
