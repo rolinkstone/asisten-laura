@@ -1,7 +1,6 @@
 const { searchChunks } = require('../vectorSearchService');
 const { hasPromptInjection, hardenSystemPrompt } = require('./promptGuard');
-const opencodeProvider = require('./opencode.provider');
-const geminiProvider = require('./gemini.provider');
+const ninerouterProvider = require('./ninerouter.provider');
 const llmConfig = require('../llmConfigService');
 
 /**
@@ -11,18 +10,17 @@ const llmConfig = require('../llmConfigService');
  *   Pertanyaan → embedding → vector search MySQL → ambil chunk relevan
  *   → bangun context (SYSTEM + SOURCE) → LLM → jawaban + sources
  *
- * Multi-provider dengan fallback:
- *   AI_PROVIDER=opencode,gemini → opencode utama, gemini cadangan
- *   (jika provider utama gagal / kena limit, otomatis lanjut ke berikutnya)
+ * Provider tunggal: 9Router (AI gateway OpenAI-compatible).
+ * Satu API key 9Router merutekan ke banyak model/provider via gateway.
  */
 
 const PROVIDERS = {
-  opencode: opencodeProvider,
-  gemini: geminiProvider
+  ninerouter: ninerouterProvider
 };
 
 /**
  * Urutan provider dari pengaturan runtime (dashboard) / env AI_PROVIDER.
+ * Dengan provider tunggal, selalu mengembalikan [ninerouterProvider].
  */
 const getProviderOrder = () => {
   const names = llmConfig.getProviderOrder();
@@ -31,7 +29,7 @@ const getProviderOrder = () => {
     const p = PROVIDERS[n.toLowerCase()];
     if (p && !ordered.includes(p)) ordered.push(p);
   }
-  if (ordered.length === 0) ordered.push(opencodeProvider);
+  if (ordered.length === 0) ordered.push(ninerouterProvider);
   return ordered;
 };
 
@@ -40,11 +38,11 @@ const getProvider = () => getProviderOrder()[0];
 
 const isProviderConfigured = (provider) => {
   if (llmConfig.isProviderConfigured(provider.name)) return true;
-  // OpenAI-compatible lokal (mis. gateway via OPENCODE_BASE_URL) tidak butuh API key
-  return provider.name === 'opencode' && !!process.env.OPENCODE_BASE_URL;
+  // Gateway 9Router lokal tanpa API key (opsional, untuk deployment lokal)
+  return provider.name === 'ninerouter' && !!process.env.NINEROUTER_BASE_URL;
 };
 
-const getProviderModelName = (provider) => llmConfig.getModel(provider.name) || 'x-preview-f-free';
+const getProviderModelName = (provider) => llmConfig.getModel(provider.name) || 'kr/auto';
 
 /**
  * Bangun blok context dari chunk hasil vector search.

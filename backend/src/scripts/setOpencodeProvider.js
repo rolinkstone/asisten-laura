@@ -6,8 +6,8 @@ const { setSetting, getAllSettings } = require('../services/settingsService');
 
 (async () => {
   await setSetting('ai_provider', 'opencode,gemini');
-  // Model opencode = Ox Alpha Free (gratis, tanpa billing)
-  await setSetting('opencode_model', 'x-preview-f-free');
+  // Model opencode = MiMo-V2.5 Free (gratis, NON-reasoning → cepat)
+  await setSetting('opencode_model', 'mimo-v2.5-free');
   // Model gemini = sesuaikan dengan .env (GEMINI_MODEL=gemini-3.6-flash)
   await setSetting('gemini_model', 'gemini-3.6-flash');
   // Bersihkan sisa pengaturan provider lama (openai/deepseek) supaya tidak mengganggu

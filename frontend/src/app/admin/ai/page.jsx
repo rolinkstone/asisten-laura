@@ -24,32 +24,33 @@ import {
   PageHeader
 } from '../../../components/admin/ui';
 
-const PROVIDERS = [
-  { name: 'opencode', label: 'OpenCode' },
-  { name: 'gemini', label: 'Gemini' }
-];
+// Provider tunggal: 9Router (AI gateway OpenAI-compatible) — 1 API key untuk semua model
+const PROVIDERS = [{ name: 'ninerouter', label: '9Router' }];
 
-// Nama tampilan ramah untuk model yang dikenal (nilai asli tetap model ID untuk API)
+// Nama tampilan ramah untuk model 9Router yang dikenal (nilai asli tetap model ID untuk API)
 const MODEL_LABELS = {
-  'x-preview-f-free': 'Ox Alpha (Free)',
-  'hy3-free': 'Hy3 (Free)',
-  'big-pickle': 'Big Pickle (Free)',
-  'nemotron-3.5-lightning-free': 'Nemotron 3.5 Lightning (Free)',
-  'deepseek-v4-flash': 'DeepSeek V4 Flash',
-  'deepseek-v4-pro': 'DeepSeek V4 Pro',
-  'gemini-3.6-flash': 'Gemini 3.6 Flash',
-  'gemini-3.5-flash': 'Gemini 3.5 Flash'
+  'kr/auto': 'Kiro Auto (otomatis)',
+  'kr/claude-sonnet-4.5': 'Claude Sonnet 4.5 (Kiro)',
+  'kr/deepseek-3.2': 'DeepSeek 3.2 (Kiro)',
+  'kr/glm-5': 'GLM-5 (Kiro)',
+  'kimi/kimi-k2.7-code': 'Kimi K2.7 Code',
+  'cx/gpt-5.4-mini': 'GPT-5.4 Mini (Codex)',
+  'cu/gemini-3.6-flash-medium': 'Gemini 3.6 Flash (Cursor)',
+  'ag/gemini-3.7-flash-medium': 'Gemini 3.7 Flash (AG)',
+  'gemini/gemini-3.6-flash': 'Gemini 3.6 Flash'
 };
 const modelLabel = (id) => MODEL_LABELS[id] || id || '-';
 
-// Opsi model OpenCode Zen — biar mudah dipilih di form (tampil sebagai saran, nilai tetap bisa diketik manual)
+// Opsi model 9Router (dari /v1/models) — biar mudah dipilih di form (tampil sebagai saran, nilai tetap bisa diketik manual)
 const MODEL_OPTIONS = [
-  { id: 'x-preview-f-free', label: 'Ox Alpha (Free)' },
-  { id: 'hy3-free', label: 'Hy3 (Free)' },
-  { id: 'big-pickle', label: 'Big Pickle (Free)' },
-  { id: 'nemotron-3.5-lightning-free', label: 'Nemotron 3.5 Lightning (Free)' },
-  { id: 'mimo-v2.5-free', label: 'MiMo-V2.5 (Free)' },
-  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash (berbayar)' }
+  { id: 'kr/auto', label: 'Kiro Auto — otomatis pilih yang tersedia' },
+  { id: 'kr/claude-sonnet-4.5', label: 'Claude Sonnet 4.5 (Kiro)' },
+  { id: 'kr/deepseek-3.2', label: 'DeepSeek 3.2 (Kiro)' },
+  { id: 'kr/glm-5', label: 'GLM-5 (Kiro)' },
+  { id: 'kimi/kimi-k2.7-code', label: 'Kimi K2.7 Code' },
+  { id: 'cx/gpt-5.4-mini', label: 'GPT-5.4 Mini (Codex)' },
+  { id: 'cu/gemini-3.6-flash-medium', label: 'Gemini 3.6 Flash (Cursor)' },
+  { id: 'ag/gemini-3.7-flash-medium', label: 'Gemini 3.7 Flash (AG)' }
 ];
 
 export default function AiPage() {
@@ -64,14 +65,24 @@ export default function AiPage() {
   const [error, setError] = useState('');
 
   const load = () => {
-    api('/admin/config', { token: getToken() })
-      .then((res) => {
-        setConfig(res.data);
+    // Endpoint tunggal pengaturan LLM/API key: GET /admin/llm-config (baca & tulis).
+    // /admin/config hanya untuk status embedding/RAG (read-only).
+    Promise.all([
+      api('/admin/llm-config', { token: getToken() }),
+      api('/admin/config', { token: getToken() })
+    ])
+      .then(([llmRes, ragRes]) => {
+        const data = {
+          ...ragRes.data, // embedding_model, search_min_score, search_result_limit, node_env
+          ...llmRes.data, // enabled, providerOrder, models, configured
+          configured: llmRes.data.configured
+        };
+        setConfig(data);
         setForm({
-          enabled: res.data.enabled,
-          providerOrder: (res.data.providerOrder || []).join(', '),
-          models: res.data.models || {},
-          keys: { opencode: '', gemini: '' }
+          enabled: data.enabled,
+          baseUrl: data.baseUrl || '',
+          models: data.models || {},
+          keys: { ninerouter: '' }
         });
       })
       .catch((err) => setError(err.message));
@@ -94,9 +105,8 @@ export default function AiPage() {
     try {
       const body = {
         enabled: form.enabled,
-        providerOrder: form.providerOrder,
-        opencode_model: form.models.opencode,
-        gemini_model: form.models.gemini
+        ninerouter_model: form.models.ninerouter,
+        ninerouter_base_url: form.baseUrl
       };
       // API key baru hanya dikirim bila diisi (hapus key pakai tombol terpisah)
       for (const p of PROVIDERS) {
@@ -220,24 +230,25 @@ export default function AiPage() {
             </button>
           </div>
 
-          {/* Urutan provider */}
+          {/* Base URL 9Router */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Urutan Provider <span className="text-slate-400">(pisahkan dengan koma)</span>
+              Base URL 9Router <span className="text-slate-400">(endpoint OpenAI-compatible)</span>
             </label>
             <Input
-              value={form.providerOrder}
-              onChange={(e) => setForm((f) => ({ ...f, providerOrder: e.target.value }))}
-              placeholder="mis. opencode, gemini"
+              value={form.baseUrl}
+              onChange={(e) => setForm((f) => ({ ...f, baseUrl: e.target.value }))}
+              placeholder="https://router.bbpompky.id/v1"
             />
             <p className="text-xs text-slate-400 mt-1">
-              Provider pertama dipakai utama; berikutnya sebagai cadangan saat utama gagal/limit.
+              Disimpan ke database dan langsung berlaku tanpa restart. Satu API key cukup untuk semua
+              model (mis. <code>kr/auto</code> atau <code>gemini/gemini-3.6-flash</code>).
             </p>
           </div>
 
           {/* Per provider */}
           <div className="space-y-4">
-            <datalist id="zen-model-options">
+            <datalist id="ninerouter-model-options">
               {MODEL_OPTIONS.map((m) => (
                 <option key={m.id} value={m.id}>{m.label}</option>
               ))}
@@ -256,7 +267,7 @@ export default function AiPage() {
                     <div>
                       <label className="block text-xs font-medium text-slate-500 mb-1">Model</label>
                       <Input
-                        list={p.name === 'opencode' ? 'zen-model-options' : undefined}
+                        list={p.name === 'ninerouter' ? 'ninerouter-model-options' : undefined}
                         value={form.models[p.name] || ''}
                         onChange={(e) =>
                           setForm((f) => ({
@@ -323,7 +334,7 @@ export default function AiPage() {
           </h2>
           <div className="space-y-3 text-sm">
             <Row label="Status" value={form.enabled ? 'Aktif' : 'Nonaktif'} badge={form.enabled ? 'Aktif' : 'Nonaktif'} badgeColor={form.enabled ? 'green' : 'red'} />
-            <Row label="Urutan Provider" value={config.providerOrder.join(' → ') || '-'} />
+            <Row label="Base URL" value={config.baseUrl || '-'} />
             {PROVIDERS.map((p) => (
               <Row
                 key={p.name}

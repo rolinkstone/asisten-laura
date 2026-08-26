@@ -12,10 +12,9 @@ router.use(auth, authorize('admin'));
 const llmUpdateValidation = [
   body('enabled').optional().isBoolean().withMessage('enabled harus boolean'),
   body('providerOrder').optional({ values: 'falsy' }).isString().withMessage('providerOrder harus string'),
-  body('opencode_model').optional({ values: 'falsy' }).isString(),
-  body('gemini_model').optional({ values: 'falsy' }).isString(),
-  body('opencode_api_key').optional({ values: 'falsy' }).isString(),
-  body('gemini_api_key').optional({ values: 'falsy' }).isString()
+  body('ninerouter_model').optional({ values: 'falsy' }).isString(),
+  body('ninerouter_api_key').optional({ values: 'falsy' }).isString(),
+  body('ninerouter_base_url').optional({ values: 'falsy' }).isString()
 ];
 
 router.get('/stats', getStats);

@@ -8,12 +8,17 @@ const { getSetting, setSetting } = require('./settingsService');
  * Tidak pernah mengekspos API key via endpoint (hanya status terkonfigurasi).
  */
 
-const PROVIDER_NAMES = ['opencode', 'gemini'];
+// Provider tunggal: 9Router (AI gateway OpenAI-compatible) — cukup 1 API key
+// untuk mengakses semua model. Nama provider internal: 'ninerouter'.
+const PROVIDER_NAMES = ['ninerouter'];
 
 const DEFAULT_MODELS = {
-  opencode: 'x-preview-f-free',
-  gemini: 'gemini-3.6-flash'
+  // kr/auto = model otomatis 9Router — pilih provider/model gratis yang tersedia
+  ninerouter: 'kr/auto'
 };
+
+// Base URL default gateway 9Router (dipakai bila tidak ada setting/env).
+const DEFAULT_BASE_URL = 'http://localhost:20128/v1';
 
 let state = null;
 
@@ -21,18 +26,15 @@ const envDefault = (key) => process.env[key] || null;
 
 const buildStateFromEnv = () => ({
   enabled: envDefault('LLM_ENABLED') !== 'false',
-  providerOrder: (envDefault('AI_PROVIDER') || 'opencode')
+  providerOrder: (envDefault('AI_PROVIDER') || 'ninerouter')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
   providers: {
-    opencode: {
-      apiKey: envDefault('OPENCODE_API_KEY'),
-      model: envDefault('OPENCODE_MODEL') || DEFAULT_MODELS.opencode
-    },
-    gemini: {
-      apiKey: envDefault('GEMINI_API_KEY'),
-      model: envDefault('GEMINI_MODEL') || DEFAULT_MODELS.gemini
+    ninerouter: {
+      apiKey: envDefault('NINEROUTER_API_KEY'),
+      model: envDefault('NINEROUTER_MODEL') || DEFAULT_MODELS.ninerouter,
+      baseUrl: envDefault('NINEROUTER_BASE_URL') || DEFAULT_BASE_URL
     }
   }
 });
@@ -48,10 +50,14 @@ const loadConfig = async () => {
 
   const order = await getSetting('ai_provider');
   if (order) {
-    state.providerOrder = order
+    // Filter ke provider yang dikenal — hindari nilai lama (mis. 'opencode,gemini')
+    // yang tersimpan di DB dari versi sebelumnya.
+    const filtered = order
       .split(',')
       .map((s) => s.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((n) => PROVIDER_NAMES.includes(n));
+    if (filtered.length) state.providerOrder = filtered;
   }
 
   for (const name of PROVIDER_NAMES) {
@@ -60,6 +66,9 @@ const loadConfig = async () => {
 
     const model = await getSetting(`${name}_model`);
     if (model) state.providers[name].model = model;
+
+    const baseUrl = await getSetting(`${name}_base_url`);
+    if (baseUrl) state.providers[name].baseUrl = baseUrl;
   }
 
   return state;
@@ -73,13 +82,15 @@ const getConfig = () => {
 const isEnabled = () => getConfig().enabled;
 
 const getProviderOrder = () => {
-  const order = getConfig().providerOrder;
-  return order.length ? order : ['opencode'];
+  const order = getConfig().providerOrder.filter((n) => PROVIDER_NAMES.includes(n));
+  return order.length ? order : ['ninerouter'];
 };
 
 const getApiKey = (name) => getConfig().providers[name]?.apiKey || null;
 
 const getModel = (name) => getConfig().providers[name]?.model || DEFAULT_MODELS[name] || null;
+
+const getBaseUrl = (name) => getConfig().providers[name]?.baseUrl || DEFAULT_BASE_URL;
 
 const isProviderConfigured = (name) => !!getApiKey(name);
 
@@ -95,32 +106,27 @@ const isProviderConfigured = (name) => !!getApiKey(name);
 const updateConfig = async ({
   enabled,
   providerOrder,
-  opencode_model,
-  gemini_model,
-  opencode_api_key,
-  gemini_api_key
+  ninerouter_model,
+  ninerouter_api_key,
+  ninerouter_base_url
 } = {}) => {
   if (enabled !== undefined) await setSetting('llm_enabled', enabled ? 'true' : 'false');
   if (providerOrder !== undefined) await setSetting('ai_provider', providerOrder);
 
-  const modelSets = [
-    ['opencode_model', opencode_model],
-    ['gemini_model', gemini_model]
-  ];
-  for (const [key, val] of modelSets) {
-    if (val !== undefined && val !== null) await setSetting(key, String(val));
+  if (ninerouter_model !== undefined && ninerouter_model !== null) {
+    await setSetting('ninerouter_model', String(ninerouter_model));
   }
 
-  const keySets = [
-    ['opencode_api_key', opencode_api_key],
-    ['gemini_api_key', gemini_api_key]
-  ];
-  for (const [key, val] of keySets) {
-    if (val !== undefined) {
-      // '' → simpan string kosong = nonaktifkan provider (override .env);
-      // non-empty → simpan; undefined → jangan ubah
-      await setSetting(key, val);
-    }
+  if (ninerouter_api_key !== undefined) {
+    // '' → simpan string kosong = nonaktifkan provider (override .env);
+    // non-empty → simpan; undefined → jangan ubah
+    await setSetting('ninerouter_api_key', ninerouter_api_key);
+  }
+
+  if (ninerouter_base_url !== undefined) {
+    // ''/null → hapus (fallback ke .env/default); non-empty → simpan (tanpa slash di akhir)
+    const normalized = ninerouter_base_url ? String(ninerouter_base_url).replace(/\/+$/, '') : null;
+    await setSetting('ninerouter_base_url', normalized);
   }
 
   await loadConfig();
@@ -134,14 +140,13 @@ const getPublicConfig = () => {
   const c = getConfig();
   return {
     enabled: c.enabled,
-    providerOrder: c.providerOrder,
+    providerOrder: getProviderOrder(),
+    baseUrl: getBaseUrl('ninerouter'),
     models: {
-      opencode: c.providers.opencode.model,
-      gemini: c.providers.gemini.model
+      ninerouter: c.providers.ninerouter.model
     },
     configured: {
-      opencode: !!c.providers.opencode.apiKey,
-      gemini: !!c.providers.gemini.apiKey
+      ninerouter: !!c.providers.ninerouter.apiKey
     }
   };
 };
@@ -161,6 +166,7 @@ module.exports = {
   getProviderOrder,
   getApiKey,
   getModel,
+  getBaseUrl,
   getMaxTokens,
   isProviderConfigured,
   DEFAULT_MODELS

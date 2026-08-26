@@ -11,7 +11,7 @@ const { getApiKey, getModel, getMaxTokens } = require('../llmConfigService');
 const name = 'opencode';
 
 const getModelName = () =>
-  getModel('opencode') || process.env.OPENCODE_MODEL || 'x-preview-f-free';
+  getModel('opencode') || process.env.OPENCODE_MODEL || 'mimo-v2.5-free';
 const getApiKeyValue = () => getApiKey('opencode') || process.env.OPENCODE_API_KEY || null;
 
 // Base URL bisa diarahkan ke server OpenAI-compatible (mis. gateway lokal)
